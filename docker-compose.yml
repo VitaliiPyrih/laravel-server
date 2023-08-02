@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./:/var/www
+            - ./_docker/nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - "8082:80"
+        depends_on:
+            - app
+        container_name: project_nginx
+        networks:
+            - app-network
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        volumes:
+            - ./:/var/www
+        container_name: project_app
+        networks:
+            - app-network
+    db:
+        image: mysql:8.0
+        restart: always
+        volumes:
+            - ./tmp/db:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: lardocker
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "8101:3306"
+        command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+        container_name: project_db
+    redis:
+        image: redis:latest
+        container_name: laravel-redis
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./_docker/redis_data:/data
